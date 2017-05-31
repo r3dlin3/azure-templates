@@ -127,11 +127,10 @@
     "imageOffer": "WindowsServer",
     "windowsOSVersion": "2016-Datacenter",
     "apiVersion": "2015-06-15",
-    "nicName": "[concat(parameters('prefix'),'-',concat(parameters('dnsLabelPrefix'),'-nic')]",
-    "publicIPName": "[concat(parameters('prefix'),'-',parameters('dnsLabelPrefix'),'-pip')]",
+    "nicName": "[concat(parameters('prefix'),'-',parameters('dnsLabelPrefix'),'-nic')]",
     "vnetID": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', parameters('existingVNETName'))]",
     "subnetId": "[concat(variables('vnetID'),'/subnets/', parameters('existingSubnetName'))]",
-    "RDPNAT" : "[concat(parameters('prefix'),'-',concat(parameters('dnsLabelPrefix'),'-rdp-nat')]"
+    "RDPNAT" : "[concat(parameters('prefix'),'-',parameters('dnsLabelPrefix'),'-rdp-nat')]"
   },
   "resources": [
      {
@@ -146,7 +145,7 @@
             "name": "[variables('RDPNAT')]",
             "properties": {
               "frontendIPConfiguration": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('LBName'), variables('LBFE'))]"
+                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', parameters('LBName'), parameters('LBFE'))]"
               },
               "protocol": "tcp",
               "frontendPort": "[parameters('RDPPort')]",
@@ -174,12 +173,12 @@
               },
               "loadBalancerBackendAddressPools": [
                 {
-                  "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('LBName'), variables('LBBE'))]"
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('LBName'), parameters('LBBE'))]"
                 }
               ],
               "loadBalancerInboundNatRules": [
                 {
-                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', variables('LBName'), variables('RDPNAT'))]"
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', parameters('LBName'), variables('RDPNAT'))]"
                 }
               ]
             }

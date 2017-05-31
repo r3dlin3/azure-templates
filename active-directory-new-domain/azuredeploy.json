@@ -57,7 +57,7 @@
     "adAvailabilitySetName": "adAvailabiltySet",
     "adLBName": "adLoadBalancer",
     "winsrvAvailabilitySetName": "winsrv-as",
-    "winsrvNicIPAddress": "10.0.0.5",
+    "winsrvNicIPAddress": "10.0.0.5"
   },
   "resources": [
     {
