@@ -1,0 +1,62 @@
+= README for Azure Deploy
+
+:Date:
+
+== Common powershell cmdlet
+
+Référence: https://docs.microsoft.com/fr-fr/azure/azure-resource-manager/resource-group-template-deploy
+
+[source,powershell]
+----
+Login-AzureRmAccount
+$rg="test1"
+New-AzureRmResourceGroup -Name $rg -Location "West Europe"
+New-AzureRmResourceGroupDeployment -Name "Deployment-$(get-date  -f yyyyMMdd-HHss)" -ResourceGroupName $rg -TemplateFile .\azuredeploy.json -TemplateParameterFile .\azuredeploy.parameters.json
+----
+
+=== View Locations
+Une jolie carte: https://azure-info.azurewebsites.net/regions/worldmap
+
+En PowerShell:
+----
+$resources = Get-AzureRmResourceProvider -ProviderNamespace Microsoft.Compute
+$resources.ResourceTypes.Where{($_.ResourceTypeName -eq 'virtualMachines')}.Locations
+East US
+East US 2
+West US
+Central US
+South Central US
+North Europe
+West Europe
+East Asia
+Southeast Asia
+Japan East
+Japan West
+North Central US
+Brazil South
+----
+
+=== View VM size
+Site Web: https://azure-info.azurewebsites.net/compute/vmsizes?location=westeurope
+
+En PowerShell:
+----
+Get-AzureRmVMSize -Location "West Europe"
+----
+
+== View OS offer
+Sur le marketplace: https://azuremarketplace.microsoft.com/fr-fr/marketplace/apps/Microsoft.WindowsServer?tab=Overview
+
+En PowerShell:
+----
+$loc = 'West Europe' #first set a location
+#View the templates available
+Get-AzureRmVMImagePublisher -Location $loc #check all the publishers available
+Get-AzureRmVMImageOffer -Location $loc -PublisherName "MicrosoftWindowsServer" #look for offers for a publisher
+Get-AzureRmVMImageSku -Location $loc -PublisherName "MicrosoftWindowsServer" -Offer "WindowsServer" #view SKUs for an offer
+Get-AzureRmVMImage -Location $loc -PublisherName "MicrosoftWindowsServer" -Offer "WindowsServer"
+----
+
+== Naming convention
+
+https://docs.microsoft.com/en-us/azure/architecture/best-practices/naming-conventions

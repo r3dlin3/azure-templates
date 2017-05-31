@@ -23,7 +23,7 @@
     "dnsPrefix": {
       "type": "string",
       "metadata": {
-        "description": "The DNS prefix for the public IP address used by the Load Balancer"
+        "description": "The DNS prefix for the public IP address used by the Load Balancer. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$"
       }
     },
     "_artifactsLocation": {
@@ -44,7 +44,7 @@
   "variables": {
     "virtualNetworkName": "ad-vnet",
     "virtualNetworkAddressRange": "10.0.0.0/16",
-    "storageAccountName": "[concat(resourceGroup().name, '-ad-sa')]",
+    "storageAccountName": "[concat(resourceGroup().name, 'adsa')]",
     "adLBFE": "LBFE",
     "adLBBE": "LBBE",
     "adRDPNAT": "adRDP",
@@ -55,7 +55,9 @@
     "adSubnetAddressPrefix": "10.0.0.0/24",
     "publicIPAddressName": "adPublicIP",
     "adAvailabilitySetName": "adAvailabiltySet",
-    "adLBName": "adLoadBalancer"
+    "adLBName": "adLoadBalancer",
+    "winsrvAvailabilitySetName": "winsrv-as",
+    "winsrvNicIPAddress": "10.0.0.5",
   },
   "resources": [
     {
@@ -311,6 +313,79 @@
             "value": [
               "[variables('adNicIPAddress')]"
             ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('winsrvAvailabilitySetName')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "Add-WinSRV",
+      "apiVersion": "2016-02-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('adVMName'), 'CreateADForest')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('winsrvAvailabilitySetName'))]"
+      ],
+      "properties": {
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/winsrv-domain-join.json', parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "existingVNETName": {
+            "value": "[variables('virtualNetworkName')]"
+          },
+          "existingSubnetName": {
+            "value": "[variables('adSubnetName')]"
+          },
+          "dnsLabelPrefix": {
+            "value": "winsrv"
+          },
+          "vmSize": {
+            "value": "Standard_D2_v2_promo"
+          },
+          "domainToJoin": {
+            "value": "[parameters('domainName')]"
+          },
+          "domainUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "domainPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "vmAdminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "vmAdminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "existingStorageAccountName": {
+            "value": "[variables('storageAccountName')]"
+          },
+          "IPAddress": {
+            "value": "[variables('winsrvNicIPAddress')]"
+          },
+          "LBName": {
+            "value": "[variables('adLBName')]"
+          },
+          "LBFE": {
+            "value": "[variables('adLBFE')]"    
+          },
+          "LBBE": {
+            "value": "[variables('adLBBE')]"    
+          },
+          "RDPPort": {
+            "value": "3390"     
+          },
+          "existingAvailabilitySet": {
+            "value": "[variables('winsrvAvailabilitySetName')]"
           }
         }
       }
