@@ -113,12 +113,6 @@
       "metadata": {
         "description": "public RDP port"
       }
-    },
-    "existingAvailabilitySet": {
-      "type": "string",
-      "metadata": {
-        "description": "Existing VNET that contains the domain controller"
-      }
     }
   },
   "variables": {
@@ -189,9 +183,6 @@
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
-        },
-        "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('existingAvailabilitySet'))]"
         },
         "osProfile": {
           "computerName": "[parameters('dnsLabelPrefix')]",
