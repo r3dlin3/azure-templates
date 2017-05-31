@@ -383,7 +383,7 @@
             "value": "[variables('adLBBE')]"    
           },
           "RDPPort": {
-            "value": "3390"     
+            "value": 3390    
           },
           "existingAvailabilitySet": {
             "value": "[variables('winsrvAvailabilitySetName')]"

@@ -85,31 +85,31 @@
       }
     },
     "IPAddress": {
-      "type": "string",    
+      "type": "string",
       "metadata": {
         "description": "Static IP address of the VM"
       }
     },
     "LBName": {
-      "type": "string",     
+      "type": "string",
       "metadata": {
         "description": "Static IP address of the VM"
       }
     },
     "LBFE": {
-      "type": "string",     
+      "type": "string",
       "metadata": {
         "description": "xxx"
       }
     },
     "LBBE": {
-      "type": "string",     
+      "type": "string",
       "metadata": {
         "description": "xxx"
       }
     },
     "RDPPort": {
-      "type": "int",     
+      "type": "int",
       "metadata": {
         "description": "public RDP port"
       }
@@ -130,30 +130,22 @@
     "nicName": "[concat(parameters('prefix'),'-',parameters('dnsLabelPrefix'),'-nic')]",
     "vnetID": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', parameters('existingVNETName'))]",
     "subnetId": "[concat(variables('vnetID'),'/subnets/', parameters('existingSubnetName'))]",
-    "RDPNAT" : "[concat(parameters('prefix'),'-',parameters('dnsLabelPrefix'),'-rdp-nat')]"
+    "RDPNATRuleName": "[concat(parameters('prefix'),'-',parameters('dnsLabelPrefix'),'-rdp-nat')]"
   },
   "resources": [
-     {
-      "type": "Microsoft.Network/loadBalancers",
-      "name": "[parameters('LBName')]",
-      "apiVersion": "2016-03-30",
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+      "name": "[concat(parameters('LBName'), '/', variables('RDPNATRuleName'))]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "mode": "Incremental",
-        "inboundNatRules": [
-          {
-            "name": "[variables('RDPNAT')]",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', parameters('LBName'), parameters('LBFE'))]"
-              },
-              "protocol": "tcp",
-              "frontendPort": "[parameters('RDPPort')]",
-              "backendPort": 3389,
-              "enableFloatingIP": false
-            }
-          }
-        ]
+        "frontendIPConfiguration": {
+          "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', parameters('LBName'), parameters('LBFE'))]"
+        },
+        "protocol": "tcp",
+        "frontendPort": "[parameters('RDPPort')]",
+        "backendPort": 3389,
+        "enableFloatingIP": false
       }
     },
     {
@@ -178,7 +170,7 @@
               ],
               "loadBalancerInboundNatRules": [
                 {
-                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', parameters('LBName'), variables('RDPNAT'))]"
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', parameters('LBName'), variables('RDPNATRuleName'))]"
                 }
               ]
             }
