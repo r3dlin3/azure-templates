@@ -57,7 +57,19 @@
     "adAvailabilitySetName": "adAvailabiltySet",
     "adLBName": "adLoadBalancer",
     "winsrvAvailabilitySetName": "winsrv-as",
-    "winsrvNicIPAddress": "10.0.0.6"
+    "winsrvNicIPAddress": "10.0.0.6",
+
+
+    "wapSubnetName": "adSubnet",
+    "wapSubnetAddressPrefix": "10.0.1.0/24",
+    "wapAvailabilitySetName": "wap-as",
+    "wapLBDNSPrefix" : "wap",
+    "wapLBName": "wap-lb",
+    "wapLBBE": "wap-lb-be",
+    "wapLBFE": "wap-lb-FE"
+    
+
+
   },
   "resources": [
     {
@@ -324,15 +336,15 @@
       "apiVersion": "2015-06-15",
       "location": "[resourceGroup().location]",
       "properties": {}
-    },*/
+    },
     {
       "type": "Microsoft.Resources/deployments",
       "name": "Add-WinSRV",
       "apiVersion": "2016-02-01",
       "dependsOn": [
-        /*"[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('adVMName'), 'CreateADForest')]",
+        "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('adVMName'), 'CreateADForest')]",
         
-        "[resourceId('Microsoft.Compute/availabilitySets', variables('winsrvAvailabilitySetName'))]",*/
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('winsrvAvailabilitySetName'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ],
       "properties": {
@@ -389,6 +401,36 @@
           },
           "existingAvailabilitySet": {
             "value": "[variables('adAvailabilitySetName')]"
+          }
+        }
+      }
+    },*/
+
+     {
+      "type": "Microsoft.Resources/deployments",
+      "name": "Add-LB-and-AS-DMZ",
+      "apiVersion": "2016-02-01",
+      "properties": {
+        "mode": "incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/lb-and-as.json', parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "lbName": {
+            "value": "[variables('wapLBName')]"
+          },
+          "lbFrontend": {
+            "value": "[variables('wapLBFE')]"
+          },
+          "lbBackendPool": {
+            "value": "[variables('wapLBBE')]"
+          },
+          "dnsPrefix": {
+            "value": "[variables('wapLBDNSPrefix')]"
+          },
+          "availabilitySetName": {
+            "value": "[variables('wapAvailabilitySetName')]"
           }
         }
       }
