@@ -136,7 +136,7 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/loadBalancers/inboundNatRules",
-      "name": "[concat(parameters('LBName'), '/', variables('RDPNATRuleName'))]",
+      "name": "[variables('RDPNATRuleName')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "frontendIPConfiguration": {
@@ -170,7 +170,7 @@
               ],
               "loadBalancerInboundNatRules": [
                 {
-                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', parameters('LBName'), '/',variables('RDPNATRuleName'))]"
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules',variables('RDPNATRuleName'))]"
                 }
               ]
             }
