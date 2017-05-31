@@ -58,10 +58,9 @@
     "adLBName": "adLoadBalancer",
     "winsrvAvailabilitySetName": "winsrv-as",
     "winsrvNicIPAddress": "10.0.0.6",
-
-
     "wapSubnetName": "wap",
     "wapSubnetAddressPrefix": "10.0.1.0/24",
+    "wapNicIPAddress": "10.0.1.5",
     "wapAvailabilitySetName": "wap-as",
     "wapLBDNSPrefix" : "[concat(resourceGroup().name, 'wap')]",
     "wapLBName": "wap-lb",
@@ -134,7 +133,7 @@
             "value": "[variables('virtualNetworkAddressRange')]"
           },
           "subnets": {
-            "value": "[variables('subnets')]"
+            "value": "[variables('subnets').value]"
           }
         }
       }
@@ -448,29 +447,60 @@
     },
     {
       "type": "Microsoft.Resources/deployments",
-      "name": "VNet",
+      "name": "Add-WAP",
       "apiVersion": "2016-02-01",
+      "dependsOn": [     
+        "[resourceId('Microsoft.Resources/deployments', 'Add-LB-and-AS-DMZ')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
+      ],
       "properties": {
-        "mode": "Incremental",
+        "mode": "incremental",
         "templateLink": {
-          "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
+          "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/winsrv.json', parameters('_artifactsLocationSasToken'))]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "virtualNetworkName": {
+          "existingVNETName": {
             "value": "[variables('virtualNetworkName')]"
           },
-          "virtualNetworkAddressRange": {
-            "value": "[variables('virtualNetworkAddressRange')]"
+          "existingSubnetName": {
+            "value": "[variables('wapSubnetName')]"
           },
-          "subnetName": {
-            "value": "[variables('adSubnetName')]"
+          "dnsLabelPrefix": {
+            "value": "wap"
           },
-          "subnetRange": {
-            "value": "[variables('adSubnetAddressPrefix')]"
+          "vmSize": {
+            "value": "Standard_D2_v2_promo"
+          },
+          "vmAdminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "vmAdminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "existingStorageAccountName": {
+            "value": "[variables('storageAccountName')]"
+          },
+          "IPAddress": {
+            "value": "[variables('wapNicIPAddress')]"
+          },
+          "LBName": {
+            "value": "[variables('wapLBName')]"
+          },
+          "LBFE": {
+            "value": "[variables('wapLBFE')]"    
+          },
+          "LBBE": {
+            "value": "[variables('wapLBBE')]"    
+          },
+          "RDPPort": {
+            "value": 3390    
+          },
+          "existingAvailabilitySet": {
+            "value": "[variables('wapAvailabilitySetName')]"
           }
         }
       }
-    }
+    },
   ]
 }
