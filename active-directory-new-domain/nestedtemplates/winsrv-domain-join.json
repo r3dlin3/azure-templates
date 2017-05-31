@@ -109,7 +109,7 @@
       }
     },
     "RDPPort": {
-      "type": "integer",     
+      "type": "int",     
       "metadata": {
         "description": "public RDP port"
       }
@@ -200,7 +200,7 @@
           "vmSize": "[parameters('vmSize')]"
         },
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('existingAvailabilitySet'))]"
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('existingAvailabilitySet'))]"
         },
         "osProfile": {
           "computerName": "[parameters('dnsLabelPrefix')]",
