@@ -60,16 +60,30 @@
     "winsrvNicIPAddress": "10.0.0.6",
 
 
-    "wapSubnetName": "adSubnet",
+    "wapSubnetName": "wap",
     "wapSubnetAddressPrefix": "10.0.1.0/24",
     "wapAvailabilitySetName": "wap-as",
-    "wapLBDNSPrefix" : "wap",
+    "wapLBDNSPrefix" : "[concat(resourceGroup().name, 'wap')]",
     "wapLBName": "wap-lb",
     "wapLBBE": "wap-lb-be",
-    "wapLBFE": "wap-lb-FE"
-    
+    "wapLBFE": "wap-lb-FE",
+    "subnets" : {
+      "value": [
+        {
+            "name": "[variables('adSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('adSubnetAddressPrefix')]"
+            }
+        },
+        {
+            "name": "[variables('wapSubnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('wapSubnetAddressPrefix')]"
+            }
+        }
 
-
+      ]
+    }
   },
   "resources": [
     {
@@ -109,7 +123,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
+          "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet-multiplesubnets.json', parameters('_artifactsLocationSasToken'))]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
@@ -119,11 +133,8 @@
           "virtualNetworkAddressRange": {
             "value": "[variables('virtualNetworkAddressRange')]"
           },
-          "subnetName": {
-            "value": "[variables('adSubnetName')]"
-          },
-          "subnetRange": {
-            "value": "[variables('adSubnetAddressPrefix')]"
+          "subnets": {
+            "value": "[variables('subnets')]"
           }
         }
       }
@@ -431,6 +442,32 @@
           },
           "availabilitySetName": {
             "value": "[variables('wapAvailabilitySetName')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "VNet",
+      "apiVersion": "2016-02-01",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "virtualNetworkName": {
+            "value": "[variables('virtualNetworkName')]"
+          },
+          "virtualNetworkAddressRange": {
+            "value": "[variables('virtualNetworkAddressRange')]"
+          },
+          "subnetName": {
+            "value": "[variables('adSubnetName')]"
+          },
+          "subnetRange": {
+            "value": "[variables('adSubnetAddressPrefix')]"
           }
         }
       }
