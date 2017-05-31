@@ -170,7 +170,7 @@
               ],
               "loadBalancerInboundNatRules": [
                 {
-                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules',variables('RDPNATRuleName'))]"
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules',parameters('LBName'),variables('RDPNATRuleName'))]"
                 }
               ]
             }
