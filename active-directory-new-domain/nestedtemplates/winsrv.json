@@ -54,33 +54,32 @@
     },
     "IPAddress": {
       "type": "string",
-      
       "metadata": {
         "description": "Static IP address of the VM"
       }
     },
     "LBName": {
-      "type": "string",     
+      "type": "string",
       "metadata": {
         "description": "Static IP address of the VM"
       }
     },
     "LBFE": {
-      "type": "string",     
+      "type": "string",
       "metadata": {
         "description": "xxx"
       }
     },
     "LBBE": {
-      "type": "string",     
+      "type": "string",
       "metadata": {
         "description": "xxx"
       }
     },
     "RDPPort": {
-      "type": "integer",     
+      "type": "int",
       "metadata": {
-        "description": "XXX"
+        "description": "public RDP port"
       }
     },
     "existingAvailabilitySet": {
@@ -96,36 +95,25 @@
     "imageOffer": "WindowsServer",
     "windowsOSVersion": "2016-Datacenter",
     "apiVersion": "2015-06-15",
-    "nicName": "[concat(parameters('prefix'),'-',concat(parameters('dnsLabelPrefix'),'-nic')]",
-    "publicIPName": "[concat(parameters('prefix'),'-',parameters('dnsLabelPrefix'),'-pip')]",
+    "nicName": "[concat(parameters('prefix'),'-',parameters('dnsLabelPrefix'),'-nic')]",
     "vnetID": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', parameters('existingVNETName'))]",
     "subnetId": "[concat(variables('vnetID'),'/subnets/', parameters('existingSubnetName'))]",
-    "RDPNAT" : "[concat(parameters('prefix'),'-',concat(parameters('dnsLabelPrefix'),'-rdp-nat')]"
+    "RDPNATRuleName": "[concat(parameters('prefix'),'-',parameters('dnsLabelPrefix'),'-rdp-nat')]"
   },
   "resources": [
-     {
-      "type": "Microsoft.Network/loadBalancers",
-      "name": "[variables('LBName')]",
-      "apiVersion": "2016-03-30",
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+      "name": "[concat(parameters('LBName'),'/',variables('RDPNATRuleName'))]",
       "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
-      ],
       "properties": {
-       "inboundNatRules": [
-          {
-            "name": "[variables('RDPNAT')]",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('LBName'), variables('LBFE'))]"
-              },
-              "protocol": "tcp",
-              "frontendPort": "[variables('RDPPort')]",
-              "backendPort": 3389,
-              "enableFloatingIP": false
-            }
-          }
-        ]
+        "frontendIPConfiguration": {
+          "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', parameters('LBName'), parameters('LBFE'))]"
+        },
+        "protocol": "tcp",
+        "frontendPort": "[parameters('RDPPort')]",
+        "backendPort": 3389,
+        "enableFloatingIP": false
       }
     },
     {
@@ -145,12 +133,12 @@
               },
               "loadBalancerBackendAddressPools": [
                 {
-                  "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('LBName'), variables('LBBE'))]"
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('LBName'), parameters('LBBE'))]"
                 }
               ],
               "loadBalancerInboundNatRules": [
                 {
-                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', variables('LBName'), variables('RDPNAT'))]"
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules',parameters('LBName'),variables('RDPNATRuleName'))]"
                 }
               ]
             }
@@ -171,7 +159,7 @@
           "vmSize": "[parameters('vmSize')]"
         },
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('existingAvailabilitySet'))]"
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('existingAvailabilitySet'))]"
         },
         "osProfile": {
           "computerName": "[parameters('dnsLabelPrefix')]",
