@@ -51,7 +51,7 @@
     "adLBDNSPrefix" : "[concat(resourceGroup().name,variables('adPrefix'))]",
     "adAvailabilitySetName": "[concat(variables('adPrefix'),'-','as')]",
     "adVMName": "[concat(variables('adPrefix'),'-','vm')]",
-    "adRDPNAT": "[concat(variables('adPrefix'),'-','rdp-nat')]",
+    "adRDPNATRuleName": "[concat(variables('adPrefix'),'-','rdp-nat')]",
     "adNicName": "[concat(variables('adPrefix'),'-','nic')]",
     "adNicIPAddress": "10.0.0.4",
     
@@ -150,6 +150,24 @@
       }
     },
     {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+      "name": "[concat(variables('adLBName'),'/',variables('adRDPNATRuleName'))]",
+      "location": "[resourceGroup().location]",
+       "dependsOn": [
+        "Microsoft.Resources/deployments/Add-LB-and-AS-AD"
+      ],
+      "properties": {
+        "frontendIPConfiguration": {
+          "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('adLBName'), variables('adLBFE'))]"
+        },
+        "protocol": "tcp",
+        "frontendPort": 3390,
+        "backendPort": 3389,
+        "enableFloatingIP": false
+      }
+    },
+    {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[variables('storageAccountName')]",
       "apiVersion": "2016-01-01",
@@ -166,7 +184,8 @@
       "apiVersion": "2016-03-30",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "Microsoft.Resources/deployments/Add-LB-and-AS-AD"
+        "Microsoft.Resources/deployments/Add-LB-and-AS-AD",
+        "[concat('Microsoft.Network/loadBalancers/',variables('adLBName'),'/inboundNatRules/',variables('adRDPNATRuleName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -185,7 +204,7 @@
               ],
               "loadBalancerInboundNatRules": [
                 {
-                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', variables('adLBName'), variables('adRDPNAT'))]"
+                  "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', variables('adLBName'), variables('adRDPNATRuleName'))]"
                 }
               ]
             }
