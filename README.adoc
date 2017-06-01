@@ -3,16 +3,27 @@
 :Date:
 
 == Common powershell cmdlet
-
+=== Deployment
 Référence: https://docs.microsoft.com/fr-fr/azure/azure-resource-manager/resource-group-template-deploy
 
-[source,powershell]
 ----
 Login-AzureRmAccount
 $rg="test1"
 New-AzureRmResourceGroup -Name $rg -Location "West Europe"
 New-AzureRmResourceGroupDeployment -Name "Deployment-$(get-date  -f yyyyMMdd-HHss)" -ResourceGroupName $rg -TemplateFile .\azuredeploy.json -TemplateParameterFile .\azuredeploy.parameters.json
 ----
+=== Remove resources
+
+
+You can simply call the following command to delete the Resource Group and all the resources in it:
+
+    Remove-AzureRmResourceGroup -Name "test1"
+
+
+If you want to delete a specific resource from a Resource Group you can use the following Powershell command:
+
+    Remove-AzureRmResource -ResourceName mystoragename -ResourceType Microsoft.Storage/storageAccounts -ResourceGroupName "test1"
+
 
 === View Locations
 Une jolie carte: https://azure-info.azurewebsites.net/regions/worldmap
