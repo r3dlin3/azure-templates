@@ -20,12 +20,6 @@
         "description": "The FQDN of the Active Directory Domain to be created"
       }
     },
-    "dnsPrefix": {
-      "type": "string",
-      "metadata": {
-        "description": "The DNS prefix for the public IP address used by the Load Balancer. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$"
-      }
-    },
     "_artifactsLocation": {
       "type": "string",
       "metadata": {
@@ -44,28 +38,43 @@
   "variables": {
     "virtualNetworkName": "ad-vnet",
     "virtualNetworkAddressRange": "10.0.0.0/16",
-    "storageAccountName": "[concat(resourceGroup().name, 'adsa')]",
-    "adLBFE": "LBFE",
-    "adLBBE": "LBBE",
-    "adRDPNAT": "adRDP",
-    "adNicName": "adNic",
-    "adNicIPAddress": "10.0.0.4",
-    "adVMName": "adVM",
+    "storageAccountName": "[concat(resourceGroup().name, 'adsa')]", 
+    
     "adSubnetName": "adSubnet",
     "adSubnetAddressPrefix": "10.0.0.0/24",
-    "publicIPAddressName": "adPublicIP",
-    "adAvailabilitySetName": "adAvailabiltySet",
-    "adLBName": "adLoadBalancer",
-    "winsrvAvailabilitySetName": "winsrv-as",
+
+    "adPrefix": "ad",
+
+    "adLBName": "[concat(variables('adPrefix'),'-','lb')]",
+    "adLBFE": "[concat(variables('adPrefix'),'-','lb-fe')]",
+    "adLBBE": "[concat(variables('adPrefix'),'-','lb-be')]",
+    "adLBDNSPrefix" : "[concat(resourceGroup().name,variables('adPrefix'))]",
+    "adAvailabilitySetName": "[concat(variables('adPrefix'),'-','as')]",
+    "adVMName": "[concat(variables('adPrefix'),'-','vm')]",
+    "adRDPNAT": "[concat(variables('adPrefix'),'-','rdp-nat')]",
+    "adNicName": "[concat(variables('adPrefix'),'-','nic')]",
+    "adNicIPAddress": "10.0.0.4",
+    
+    
+
+    "winsrvPrefix": "winsrv",
+    "winsrvLBName": "[concat(variables('winsrvPrefix'),'-','lb')]",
+    "winsrvLBFE": "[concat(variables('winsrvPrefix'),'-','lb-fe')]",
+    "winsrvLBBE": "[concat(variables('winsrvPrefix'),'-','lb-be')]",
+    "winsrvLBDNSPrefix" : "[concat(resourceGroup().name,variables('winsrvPrefix'))]",
+    "winsrvAvailabilitySetName": "[concat(variables('winsrvPrefix'),'-','as')]",
+    "winsrvVMName": "[concat(variables('winsrvPrefix'),'-','vm')]",
     "winsrvNicIPAddress": "10.0.0.6",
+    
+    "wapLBDNSPrefix" : "[concat(resourceGroup().name,'wap')]",
+    "wapLBName": "wap-lb",
+    "wapLBBE": "wap-lb-be",
+    "wapLBFE": "wap-lb-FE",
     "wapSubnetName": "wap",
     "wapSubnetAddressPrefix": "10.0.1.0/24",
     "wapNicIPAddress": "10.0.1.5",
     "wapAvailabilitySetName": "wap-as",
-    "wapLBDNSPrefix" : "[concat(resourceGroup().name, 'wap')]",
-    "wapLBName": "wap-lb",
-    "wapLBBE": "wap-lb-be",
-    "wapLBFE": "wap-lb-FE",
+
     "subnets" : {
       "value": [
         {
@@ -85,36 +94,6 @@
     }
   },
   "resources": [
-    {
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('storageAccountName')]",
-      "apiVersion": "2016-01-01",
-      "location": "[resourceGroup().location]",
-      "sku": {
-        "name": "Standard_LRS"
-      },
-      "kind": "Storage",
-      "properties": {}
-    },
-    {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('publicIPAddressName')]",
-      "apiVersion": "2016-03-30",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('dnsPrefix')]"
-        }
-      }
-    },
-    {
-      "type": "Microsoft.Compute/availabilitySets",
-      "name": "[variables('adAvailabilitySetName')]",
-      "apiVersion": "2015-06-15",
-      "location": "[resourceGroup().location]",
-      "properties": {}
-    },
     {
       "type": "Microsoft.Resources/deployments",
       "name": "VNet",
@@ -138,46 +117,48 @@
         }
       }
     },
-    /*
     {
-      "type": "Microsoft.Network/loadBalancers",
-      "name": "[variables('adLBName')]",
-      "apiVersion": "2016-03-30",
-      "location": "[resourceGroup().location]",
+      "type": "Microsoft.Resources/deployments",
+      "name": "Add-LB-and-AS-AD",
+      "apiVersion": "2016-02-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+        "Microsoft.Resources/deployments/VNet"
       ],
       "properties": {
-        "frontendIPConfigurations": [
-          {
-            "name": "[variables('adLBFE')]",
-            "properties": {
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
-              }
-            }
+        "mode": "incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/lb-and-as.json', parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "lbName": {
+            "value": "[variables('adLBName')]"
+          },
+          "lbFrontend": {
+            "value": "[variables('adLBFE')]"
+          },
+          "lbBackendPool": {
+            "value": "[variables('adLBBE')]"
+          },
+          "dnsPrefix": {
+            "value": "[variables('adLBDNSPrefix')]"
+          },
+          "availabilitySetName": {
+            "value": "[variables('adAvailabilitySetName')]"
           }
-        ],
-        "backendAddressPools": [
-          {
-            "name": "[variables('adLBBE')]"
-          }
-        ],
-        "inboundNatRules": [
-          {
-            "name": "[variables('adRDPNAT')]",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('adLBName'), variables('adLBFE'))]"
-              },
-              "protocol": "tcp",
-              "frontendPort": 3389,
-              "backendPort": 3389,
-              "enableFloatingIP": false
-            }
-          }
-        ]
+        }
       }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "apiVersion": "2016-01-01",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "Storage",
+      "properties": {}
     },
     {
       "type": "Microsoft.Network/networkInterfaces",
@@ -185,8 +166,7 @@
       "apiVersion": "2016-03-30",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "Microsoft.Resources/deployments/VNet",
-        "[resourceId('Microsoft.Network/loadBalancers', variables('adLBName'))]"
+        "Microsoft.Resources/deployments/Add-LB-and-AS-AD"
       ],
       "properties": {
         "ipConfigurations": [
@@ -220,9 +200,7 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('adNicName'))]",
-        "[resourceId('Microsoft.Compute/availabilitySets', variables('adAvailabilitySetName'))]",
-        "[resourceId('Microsoft.Network/loadBalancers', variables('adLBName'))]"
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('adNicName'))]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -341,11 +319,33 @@
       }
     },
     {
-      "type": "Microsoft.Compute/availabilitySets",
-      "name": "[variables('winsrvAvailabilitySetName')]",
-      "apiVersion": "2015-06-15",
-      "location": "[resourceGroup().location]",
-      "properties": {}
+      "type": "Microsoft.Resources/deployments",
+      "name": "Add-LB-and-AS-WINSRV",
+      "apiVersion": "2016-02-01",
+      "properties": {
+        "mode": "incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/nestedtemplates/lb-and-as.json', parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "lbName": {
+            "value": "[variables('winsrvLBName')]"
+          },
+          "lbFrontend": {
+            "value": "[variables('winsrvLBFE')]"
+          },
+          "lbBackendPool": {
+            "value": "[variables('winsrvLBBE')]"
+          },
+          "dnsPrefix": {
+            "value": "[variables('winsrvLBDNSPrefix')]"
+          },
+          "availabilitySetName": {
+            "value": "[variables('winsrvAvailabilitySetName')]"
+          }
+        }
+      }
     },
     {
       "type": "Microsoft.Resources/deployments",
@@ -353,8 +353,7 @@
       "apiVersion": "2016-02-01",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('adVMName'), 'CreateADForest')]",
-        
-        "[resourceId('Microsoft.Compute/availabilitySets', variables('winsrvAvailabilitySetName'))]",
+        "Microsoft.Resources/deployments/Add-LB-and-AS-WINSRV",
         "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]"
       ],
       "properties": {
@@ -371,7 +370,7 @@
             "value": "[variables('adSubnetName')]"
           },
           "dnsLabelPrefix": {
-            "value": "winsrv"
+            "value": "[variables('winsrvVMName')]"
           },
           "vmSize": {
             "value": "Standard_D2_v2_promo"
@@ -398,24 +397,23 @@
             "value": "[variables('winsrvNicIPAddress')]"
           },
           "LBName": {
-            "value": "[variables('adLBName')]"
+            "value": "[variables('winsrvLBName')]"
           },
           "LBFE": {
-            "value": "[variables('adLBFE')]"    
+            "value": "[variables('winsrvLBFE')]"    
           },
           "LBBE": {
-            "value": "[variables('adLBBE')]"    
+            "value": "[variables('winsrvLBBE')]"    
           },
           "RDPPort": {
             "value": 3390    
           },
           "existingAvailabilitySet": {
-            "value": "[variables('adAvailabilitySetName')]"
+            "value": "[variables('winsrvAvailabilitySetName')]"
           }
         }
       }
-    },*/
-
+    },
      {
       "type": "Microsoft.Resources/deployments",
       "name": "Add-LB-and-AS-DMZ",
