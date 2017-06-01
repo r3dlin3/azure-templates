@@ -40,7 +40,6 @@ param(
     [string]
     $resourceGroupLocation,
 
-
     [string]
     $deploymentName = "Deployment-$(get-date  -f yyyyMMdd-HHss)",
 
@@ -50,7 +49,9 @@ param(
 
     [ValidateScript({$_ -eq $null -or (Test-Path -PathType leaf $_)})]
     [string]
-    $parametersFilePath
+    $parametersFilePath,
+
+    [switch]$WhatIf
 )
 
 <#
@@ -120,11 +121,22 @@ else {
     Write-Host "Using existing resource group '$resourceGroupName'";
 }
 
-# Start the deployment
-Write-Host "Starting deployment...";
-if ($parametersFilePath) {
-    New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -TemplateParameterFile $parametersFilePath -Verbose
-}
-else {
-    New-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -Verbose
+if ($WhatIf) {
+     # Note: the resource group must exists in order to test the template
+    Write-Host "Testing deployment...";
+    if ($parametersFilePath) {
+        Test-AzureRmResourceGroupDeployment -ResourceGroupName "$resourceGroupName" -TemplateFile $templateFilePath -TemplateParameterFile $parametersFilePath -Verbose
+    }
+    else {
+        Test-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -Verbose
+    }
+} else {
+    # Start the deployment
+    Write-Host "Starting deployment...";
+    if ($parametersFilePath) {
+        New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -TemplateParameterFile $parametersFilePath -Verbose
+    }
+    else {
+        New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -Verbose
+    }
 }
