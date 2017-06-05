@@ -57,21 +57,25 @@ workflow StartStopAzureRMVMsWorkflow {
         [Parameter(Mandatory = $true)][string]$Subscription
     )
 
-    foreach -parallel ($VMName in $VMNames) {
+    foreach -parallel ($VM in $VMNames) {
         Login-AzureRmAccount -Credential $Credential
         if (-not $resourceGroupName) {
-            $resourceGroupName = $vmName.resourceGroupName
-            $vmName = $vmName.Name
+            $VMResourceGroupName = $VM.resourceGroupName
+            $vmName = $VM.Name
+        } else {
+            $VMResourceGroupName = $resourceGroupName
+            $vmName = $VM
         }
 
-        if ($action -eq 'Stop') {
-            
-            Write-Output "Stopping VM $resourceGroupName/$vmName"
-            Stop-AzureRmVM -ResourceGroupName $resourceGroupName -Name $vmName -Force		
+        if ($action -eq 'Stop') {         
+            Write-Output "Stopping VM $VMResourceGroupName/$vmName"
+            Stop-AzureRmVM -ResourceGroupName $VMResourceGroupName -Name $vmName -Force
+            Write-Output "VM $VMResourceGroupName/$vmName stopped"
             
         } elseif ($action -eq 'Start') {    
-            Write-Output "Starting VM $resourceGroupName/$vmName"
-            Start-AzureRmVM -ResourceGroupName $resourceGroupName -Name $vmName 
+            Write-Output "Starting VM $VMResourceGroupName/$vmName"
+            Start-AzureRmVM -ResourceGroupName $VMResourceGroupName -Name $vmName
+            Write-Output "VM $VMResourceGroupName/$vmName started"
         }
     }
 }

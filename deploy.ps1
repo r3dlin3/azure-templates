@@ -23,13 +23,13 @@
  .PARAMETER parametersFilePath
     Optional, path to the parameters file. Defaults to parameters.json. If file is not found, will prompt for parameter values based on template.
 #>
-[CmdletBinding(DefaultParametersetName="subName")] 
+[CmdletBinding(DefaultParametersetName = "subName")] 
 param(
-    [Parameter(ParameterSetName="subId")]
+    [Parameter(ParameterSetName = "subId")]
     [string]
     $subscriptionId,
 
-    [Parameter(ParameterSetName="subName")]
+    [Parameter(ParameterSetName = "subName")]
     [string]
     $subscriptionName,
 
@@ -43,11 +43,11 @@ param(
     [string]
     $deploymentName = "Deployment-$(get-date  -f yyyyMMdd-HHss)",
 
-    [ValidateScript({Test-Path -PathType leaf $_})]
+    [ValidateScript( {Test-Path -PathType leaf $_})]
     [string]
     $templateFilePath,
 
-    [ValidateScript({$_ -eq $null -or (Test-Path -PathType leaf $_)})]
+    [ValidateScript( {$_ -eq $null -or (Test-Path -PathType leaf $_)})]
     [string]
     $parametersFilePath,
 
@@ -75,13 +75,13 @@ $ErrorActionPreference = "Stop"
 
 # sign in
 Try {
-  Get-AzureRmContext | Out-Null
-  Write-Host "Already logged...";
+    Get-AzureRmContext | Out-Null
+    Write-Host "Already logged...";
 } Catch {
-  if ($_ -like "*Login-AzureRmAccount to login*") {
-    Write-Host "Logging in...";
-    Login-AzureRmAccount
-  }
+    if ($_ -like "*Login-AzureRmAccount to login*") {
+        Write-Host "Logging in...";
+        Login-AzureRmAccount
+    }
 }
 
 
@@ -89,10 +89,12 @@ if ($PsCmdlet.ParameterSetName -eq "subId") {
     # select subscription
     Write-Host "Selecting subscription '$subscriptionId'";
     Select-AzureRmSubscription -SubscriptionID $subscriptionId;
-} elseif (-not [string]::IsNullOrEmpty($subscriptionName)) {
+}
+elseif (-not [string]::IsNullOrEmpty($subscriptionName)) {
     Write-Host "Selecting subscription '$subscriptionName'";
     Select-AzureRmSubscription -SubscriptionName $subscriptionName;
-} else {
+}
+else {
     $c = Get-AzureRmContext
     Write-Host "Using subscription '$($c.Subscription.SubscriptionName) ($($c.Subscription.SubscriptionId))'";
 }
@@ -122,7 +124,7 @@ else {
 }
 
 if ($WhatIf) {
-     # Note: the resource group must exists in order to test the template
+    # Note: the resource group must exists in order to test the template
     Write-Host "Testing deployment...";
     if ($parametersFilePath) {
         Test-AzureRmResourceGroupDeployment -ResourceGroupName "$resourceGroupName" -TemplateFile $templateFilePath -TemplateParameterFile $parametersFilePath -Verbose
@@ -130,7 +132,8 @@ if ($WhatIf) {
     else {
         Test-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -Verbose
     }
-} else {
+}
+else {
     # Start the deployment
     Write-Host "Starting deployment...";
     if ($parametersFilePath) {
