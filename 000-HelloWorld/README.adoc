@@ -1,0 +1,4 @@
+To run this sample in Powershell:
+
+    Login-AzureRmAccount
+    New-AzureRmResourceGroupDeployment -ResourceGroupName "XXX" -TemplateParameterFile .\SampleString.parameters.json -TemplateFile .\SampleString.json
