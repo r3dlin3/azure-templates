@@ -1,0 +1,15 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {},
+	"variables": {
+		"randomstring": "[concat('P', uniqueString(subscription().id, resourceGroup().id, deployment().name, guid(resourceGroup().id, deployment().name)), 'x', '!')]"
+	},
+	"resources": [],
+	"outputs": {
+		"exampleOutput": {
+			"value": "[variables('randomstring')]",
+			"type" : "string"
+		}
+	}
+}
