@@ -41,7 +41,7 @@ param(
     $resourceGroupLocation,
 
     [string]
-    $deploymentName = "Deployment-$(get-date  -f yyyyMMdd-HHss)",
+    $deploymentName,
 
     [ValidateScript( {Test-Path -PathType leaf $_})]
     [string]
@@ -64,7 +64,7 @@ Function RegisterRP {
     )
 
     Write-Host "Registering resource provider '$ResourceProviderNamespace'";
-    Register-AzureRmResourceProvider -ProviderNamespace $ResourceProviderNamespace;
+    #Register-AzureRmResourceProvider -ProviderNamespace $ResourceProviderNamespace;
 }
 
 #******************************************************************************
@@ -101,7 +101,7 @@ else {
 
 
 # Register RPs
-$resourceProviders = @("microsoft.compute", "microsoft.network");
+$resourceProviders = @("microsoft.compute", "microsoft.network","microsoft.keyvault");
 if ($resourceProviders.length) {
     Write-Host "Registering resource providers"
     foreach ($resourceProvider in $resourceProviders) {
@@ -136,6 +136,11 @@ if ($WhatIf) {
 else {
     # Start the deployment
     Write-Host "Starting deployment...";
+
+    if (-not $deploymentName)  {
+        $deploymentName = (Get-Item $templateFilePath).Basename+"-$(get-date  -f yyyyMMdd-HHss)"
+    }
+
     if ($parametersFilePath) {
         New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -TemplateParameterFile $parametersFilePath -Verbose
     }
