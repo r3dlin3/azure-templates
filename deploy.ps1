@@ -135,11 +135,11 @@ if ($WhatIf) {
 }
 else {
     # Start the deployment
-    Write-Host "Starting deployment...";
-
     if (-not $deploymentName)  {
         $deploymentName = (Get-Item $templateFilePath).Basename+"-$(get-date  -f yyyyMMdd-HHss)"
     }
+
+    Write-Host "Starting deployment $deploymentName...";
 
     if ($parametersFilePath) {
         New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $resourceGroupName -TemplateFile $templateFilePath -TemplateParameterFile $parametersFilePath -Verbose
