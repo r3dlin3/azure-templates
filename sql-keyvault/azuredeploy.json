@@ -51,12 +51,35 @@
             "metadata": {
                 "description": "Specifies if the vault is enabled for volume encryption"
             }
+        },
+        "enableAzureService": {
+           "type": "bool",
+           "defaultValue": true,
+           "metadata": {
+                "description": "Enable Azure service on Azure SQL Server"
+            }
+        },
+        "enableAudit": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Activate or not the audit"
+            }
+        },
+        "auditStorageAccount": {
+            "type": "object",
+            "metadata": {
+                "description": "Information on the storage account for audit"
+            }
         }
     },
     "variables": {
         "randomstring": "[concat('P', uniqueString(subscription().id, resourceGroup().id, deployment().name, guid(resourceGroup().id, deployment().name)), 'x', '!')]",
-        "kvFullName": "[concat('kv-',parameters('kvName'),'-',uniqueString(subscription().id, resourceGroup().id))]"
-
+        "admsql": "[concat('adm-', uniqueString(subscription().id, resourceGroup().id))]",
+        "kvFullName": "[concat('kv-',parameters('kvName'),'-',uniqueString(subscription().id, resourceGroup().id))]",
+        "sqlFullName": "[concat('sql-',parameters('sqlServerName'),'-',uniqueString(subscription().id, resourceGroup().id))]",
+        "auditStorageAccountFullname": "[parameters('auditStorageAccount').name]",
+        "auditStorageEndpoint": "[concat('https://',parameters('auditStorageAccount').name,'.blob.core.windows.net')]"
     },
     "resources": [
         {
@@ -87,7 +110,66 @@
             "dependsOn": [
                 "[concat('Microsoft.KeyVault/vaults/', variables('kvFullName'))]"
             ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('auditStorageAccountFullname')]",
+            "condition": "[equals(parameters('auditStorageAccount').newOrExisting,'new')]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "accountType": "Standard_LRS"
+            }
+        },
+        {
+            "apiVersion": "2015-05-01-preview",
+            "name": "[variables('sqlFullName')]",
+            "type": "Microsoft.Sql/servers",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "[variables('sqlFullName')]"
+            },
+            "properties": {
+                "administratorLogin": "[variables('admsql')]",
+                "administratorLoginPassword": "[variables('randomstring')]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "2014-04-01-preview",
+                    "condition": "[parameters('enableAzureService')]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Sql/servers/',variables('sqlFullName'))]"
+                    ],
+                    "location": "[resourceGroup().location]",
+                    "name": "AllowAllWindowsAzureIps",
+                    "properties": {
+                        "startIpAddress": "0.0.0.0",
+                        "endIpAddress": "0.0.0.0"
+                    },
+                    "type": "firewallrules"
+                },
+                {
+                     "apiVersion": "2015-05-01-preview",
+                     "type": "auditingSettings",
+                     "name": "Default",
+                     "location": "[resourceGroup().location]",
+                     "dependsOn": [
+                         "[concat('Microsoft.Sql/servers/',variables('sqlFullName'))]",
+                        "[concat('Microsoft.Storage/storageAccounts/',variables('auditStorageAccountFullname'))]"
+                     ],
+                     "properties": {
+                      "State": "Enabled",
+                       "storageEndpoint": "[variables('auditStorageEndpoint')]",
+                       "storageAccountAccessKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('auditStorageAccountFullname')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value]",
+                       "retentionDays": 0,
+                       "auditActionsAndGroups": null,
+                       "storageAccountSubscriptionId": "[subscription().subscriptionId]",
+                       "isStorageSecondaryKeyInUse": false
+                     }
+                    }
+            ]
         }
+        
     ],
     "outputs": {}
 }

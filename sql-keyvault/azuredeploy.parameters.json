@@ -10,6 +10,12 @@
         },
         "tenantId": {
             "value": "5f544ded-d1ce-4f2a-a54c-3f0da3e9396c"
+        },
+        "auditStorageAccount": {
+            "value": {
+                "name": "ssvulnerabilityassess",
+                "newOrExisting": "existing"
+            }
         }
     }
 }
