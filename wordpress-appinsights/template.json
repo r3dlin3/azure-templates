@@ -1,0 +1,245 @@
+{
+    "parameters": {
+        "databaseName": {
+            "type": "string"
+        },
+        "administratorLogin": {
+            "type": "string"
+        },
+        "administratorLoginPassword": {
+            "type": "securestring"
+        },
+        "skuCapacityDTU": {
+            "type": "int"
+        },
+        "skuFamily": {
+            "type": "string"
+        },
+        "mysqlSkuTier": {
+            "type": "string",
+            "allowedValues":[  
+                "Basic",
+                "Standard"
+             ],
+             "defaultValue":"Standard",
+             "metadata":{  
+                "description":"MySQL SKU Tier"
+             }
+        },
+        "mysqlSkuSizeMB": {
+            "type": "int"
+        },
+        "mysqlSkuName": {
+            "type": "string"
+        },
+        "mysqlVersion":{  
+            "type":"string",
+            "allowedValues":[  
+               "5.6",
+               "5.7"
+            ],
+            "defaultValue":"5.7",
+            "metadata":{  
+               "description":"MySQL version"
+            }
+         },
+        "charset": {
+            "type": "string",
+            "defaultValue": "utf8"
+        },
+        "collation": {
+            "type": "string",
+            "defaultValue": "utf8_general_ci"
+        },
+        "skuCode": {
+            "type": "string",
+            "defaultValue": "S1",
+            "allowedValues": [
+              "F1",
+              "D1",
+              "B1",
+              "B2",
+              "B3",
+              "S1",
+              "S2",
+              "S3",
+              "P1",
+              "P2",
+              "P3",
+              "P4"
+            ]
+        },
+        "workerSize": {
+            "type": "string",
+            "allowedValues": [
+                "0",
+                "1",
+                "2"
+            ],
+            "defaultValue": "0",
+            "metadata": {
+                "description": "The instance size of the hosting plan (small, medium, or large)."
+            }
+        },
+        "createAppInsights": {
+            "type": "string",
+            "defaultValue": "No",
+            "allowedValues":[  
+                "Yes",
+                "No"
+             ],
+            "metadata": {
+                "description": "Create an Azure Application Insights in the resource group"
+            }
+        }
+    },
+    "variables": {
+        "suffix" : "[replace(substring(resourceGroup().name,2),'_','-')]",
+        "hostingPlanName" : "[concat('ASP',variables('suffix'))]",
+        "mysqlServerName": "[toLower(concat('MYS',variables('suffix')))]",
+        "name": "[concat('WAS',variables('suffix'))]",
+        "appInsightsName": "[concat('AIN',variables('suffix'))]",
+        "appInsightsId": "[concat(resourceGroup().id,'/providers/Microsoft.Insights/components/', variables('appInsightsName'))]"
+    },
+    "resources": [
+        {
+            "name": "[variables('name')]",
+            "type": "Microsoft.Web/sites",
+            "properties": {
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "PHPMYADMIN_EXTENSION_VERSION",
+                            "value": "latest"
+                        },
+                        {
+                            "name": "WEBSITE_DYNAMIC_CACHE",
+                            "value": "0"
+                        },
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value":"[if(equals(parameters('createAppInsights'),'Yes'),reference(variables('appInsightsId'), '2014-04-01').InstrumentationKey,'')]"
+                        }
+                    ],
+                    "phpVersion": "7.0",
+                    "connectionStrings": [
+                        {
+                            "name": "defaultConnection",
+                            "ConnectionString": "[concat('Database=', parameters('databaseName'), ';Data Source=', variables('mysqlServerName') ,'.mysql.database.azure.com;User Id=',parameters('administratorLogin'),'@',variables('mysqlServerName') ,';Password=',parameters('administratorLoginPassword'))]",
+                            "type": "MySQL"
+                        }
+                    ]
+                },
+                "name": "[variables('name')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms',variables('hostingPlanName'))]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "2016-03-01",
+                    "name": "web",
+                    "type": "sourcecontrols",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('name'))]"
+                    ],
+                    "properties": {
+                        "RepoUrl": "https://github.com/azureappserviceoss/wordpress-azure",
+                        "branch": "master",
+                        "IsManualIntegration": true
+                    }
+                },
+                {
+                    "condition": "[equals(parameters('createAppInsights'),'Yes')]",
+                    "apiVersion": "2015-08-01",
+                    "name": "Microsoft.ApplicationInsights.AzureWebSites",
+                    "type": "siteextensions",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('name'))]"
+                    ],
+                    "properties": {
+                    }
+                }
+            ],
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('hostingPlanName'))]",
+                "[concat('microsoft.insights/components/', variables('appInsightsName'))]"
+            ],
+            "apiVersion": "2016-03-01",
+            "location": "[resourceGroup().location]"
+        },
+        {
+            "apiVersion": "2016-09-01",
+            "name": "[variables('hostingPlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[variables('hostingPlanName')]",
+                "workerSizeId": "[parameters('workerSize')]",
+                "numberOfWorkers": "1"
+            },
+            "sku": {
+                "Name": "[parameters('skuCode')]"
+            }
+        },
+        {
+            "name": "[variables('mysqlServerName')]",
+            "type": "Microsoft.DBforMySQL/servers",
+            "apiVersion": "2016-02-01-privatepreview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "version": "[parameters('mysqlVersion')]",
+                "administratorLogin": "[parameters('administratorLogin')]",
+                "administratorLoginPassword": "[parameters('administratorLoginPassword')]",
+                "storageMB": "[parameters('mysqlSkuSizeMB')]",
+                "sslEnforcement": "Disabled"
+            },
+            "sku": {
+                "name"    : "[parameters('mysqlSkuName')]",
+                "tier"    : "[parameters('mysqlSkuTier')]",
+                "capacity": "[parameters('skuCapacityDTU')]",
+                "size"    : "[parameters('mysqlSkuSizeMB')]",
+                "family"  : "[parameters('skuFamily')]"
+            },
+            "resources": [
+                {
+                    "name": "AllowAll",
+                    "type": "firewallrules",
+                    "apiVersion": "2016-02-01-privatepreview",
+                    "properties": {
+                        "startIpAddress": "0.0.0.0",
+                        "endIpAddress": "255.255.255.255"
+                    },
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('mysqlServerName'), '/databases/' , parameters('databaseName'))]",
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('mysqlServerName'))]"
+                    ]
+                },
+                {
+                    "name": "[parameters('databaseName')]",
+                    "type": "databases",
+                    "apiVersion": "2016-02-01-privatepreview",
+                    "properties": {
+                        "charset": "[parameters('charset')]",
+                        "collation": "[parameters('collation')]"
+                    },
+                    "dependsOn": [
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('mysqlServerName'))]"
+                    ]
+                }
+            ]
+        },
+        {
+            "apiVersion": "2014-04-01",
+            "name": "[variables('appInsightsName')]",
+            "type": "Microsoft.Insights/components",
+            "kind": "web",
+            "condition": "[equals(parameters('createAppInsights'),'Yes')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "applicationId": "[variables('appInsightsName')]"
+            }
+        }
+    ],
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0"
+}
