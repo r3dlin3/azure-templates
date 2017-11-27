@@ -2,29 +2,30 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "databaseName": {
+        "mysqlDatabaseName": {
             "value": "mysqldbwordpress"
         },
-        "administratorLogin": {
+        "mysqlAdministratorLogin": {
             "value": "mysqldbuser"
         },
-        "administratorLoginPassword": {
+        "mysqlAdministratorPassword": {
             "value": "Soleil123"
         },
-        "skuCapacityDTU": {
+        "mysqlSkuTier": {
+            "value": "Standard"
+        },
+        "mysqlDTU": {
             "value": 100
-        },
-        "skuFamily": {
-            "value": "SkuFamily"
-        },
-        "mysqlSkuName": {
-            "value": "MYSQLS100"
         },
         "mysqlSkuSizeMB": {
             "value": 128000
         },
-        "skuCode": {
-            "value": "F1"
+        "appServiceSku": {
+            "value": "B1"
+        },
+        "useCDN": {
+            "value": "No"
         }
+
     }
 }
