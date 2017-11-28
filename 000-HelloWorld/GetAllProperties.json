@@ -1,0 +1,35 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourceType": {
+           "type": "string",
+           "allowedValues": [
+                "Microsoft.Web/sites"
+           ],
+           "metadata": {
+                "description": "Type of the resource"
+            }
+        },
+        "resourceName": {
+           "type": "string",
+           "metadata": {
+                "description": "Name of the resource"
+            }
+        },
+        "MyApiVersion": {
+           "type": "string"
+        }
+    },
+    "resources": [],
+    "outputs": {
+        "Properties": {
+            "value": "[reference(resourceId(parameters('resourceType'), parameters('resourceName')),parameters('MyApiVersion'))]",
+            "type" : "object"
+        },
+        "Full": {
+            "value": "[reference(resourceId(parameters('resourceType'), parameters('resourceName')),parameters('MyApiVersion'),'Full')]",
+            "type" : "object"
+        }
+    }
+}
