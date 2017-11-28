@@ -1,0 +1,28 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {},
+    "variables": {
+        "resourceType2" : "Microsoft.Web/sites",
+        "resouceName2" :"XXX"
+    },
+    "resources": [],
+    "outputs": {
+        "possibleOutboundIpAddresses": {
+			"value": "[reference(resourceId(variables('resourceType2'), variables('resouceName2')), '2015-05-01').possibleOutboundIpAddresses]",
+			"type" : "string"
+        },
+        "OutboundIpAddresses": {
+			"value": "[split(reference(resourceId(variables('resourceType2'), variables('resouceName2')), '2015-05-01').OutboundIpAddresses,',')[2]]",
+			"type" : "string"
+        },
+        "Array": {
+			"value": "[split(reference(resourceId(variables('resourceType2'), variables('resouceName2')), '2015-05-01').OutboundIpAddresses,',')]",
+			"type" : "array"
+		},
+        "Length": {
+			"value": "[length(split(reference(resourceId(variables('resourceType2'), variables('resouceName2')), '2015-05-01').OutboundIpAddresses,','))]",
+			"type" : "int"
+		}
+    }
+}
