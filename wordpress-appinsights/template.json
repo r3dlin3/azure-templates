@@ -245,21 +245,6 @@
             },
             "resources": [
                 {
-                    "name": "AllowAll",
-                    "type": "firewallrules",
-                    "apiVersion": "2016-02-01-privatepreview",
-                    "properties": {
-                        "startIpAddress": "0.0.0.0",
-                        "endIpAddress": "255.255.255.255"
-                    },
-                    "location": "[resourceGroup().location]",
-                    "dependsOn": [
-                        /*
-                        "[concat('Microsoft.DBforMySQL/servers/', variables('mysqlServerName'), '/databases/' , parameters('mysqlDatabaseName'))]",*/
-                        "[concat('Microsoft.DBforMySQL/servers/', variables('mysqlServerName'))]"
-                    ]
-                },
-                {
                     "name": "[parameters('mysqlDatabaseName')]",
                     "type": "databases",
                     "location": "[resourceGroup().location]",
@@ -274,6 +259,23 @@
                 }
             ]
         },
+        {
+          "name": "[concat(variables('mysqlServerName'), '/', 'fwrule', copyIndex(1))]",
+          "type": "Microsoft.DBforMySQL/servers/firewallrules",
+          "apiVersion": "2016-02-01-privatepreview",
+          "copy": {
+              "name": "fwrule",
+              "count": 7
+          },
+          "properties": {
+              "startIpAddress": "[split(reference(resourceId('Microsoft.Web/sites', variables('webSiteName')), '2015-05-01').possibleOutboundIpAddresses,',')[copyIndex()]]",
+              "endIpAddress"  : "[split(reference(resourceId('Microsoft.Web/sites', variables('webSiteName')), '2015-05-01').possibleOutboundIpAddresses,',')[copyIndex()]]"
+          },
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+              "[concat('Microsoft.DBforMySQL/servers/', variables('mysqlServerName'))]"
+          ]
+      },
         {
             "apiVersion": "2014-04-01",
             "name": "[variables('appInsightsName')]",
@@ -437,7 +439,7 @@
               },
             "dependsOn": [
               "[concat('microsoft.insights/components/', variables('appInsightsName'))]",
-              "[concat('Microsoft.Web/sites/', variables('webSiteName'))]",
+              "[concat('Microsoft.Web/sites/', variables('webSiteName'))]"
             ],
             "properties": {
               "Name": "[variables('webTestName')]",
@@ -517,7 +519,7 @@
                   "originHostHeader": "[reference(variables('webSiteName')).hostNames[0]]",
                   "isHttpAllowed": true,
                   "isHttpsAllowed": true,
-                  "queryStringCachingBehavior": "UseQueryString", // Version in query string. IgnoreQueryString otherwise
+                  "queryStringCachingBehavior": "UseQueryString",
                   "contentTypesToCompress": [
                     "text/plain",
                     "text/html",

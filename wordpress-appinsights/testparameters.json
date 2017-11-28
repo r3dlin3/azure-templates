@@ -21,7 +21,7 @@
             "value": 128000
         },
         "appServiceSku": {
-            "value": "B1"
+            "value": "S1"
         },
         "useCDN": {
             "value": "No"
