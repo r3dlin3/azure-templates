@@ -1,0 +1,32 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {},
+    "variables": {
+        "resourceType" : "Microsoft.Insights/components",
+        "resouceName" :"XXX",
+        "property" : "InstrumentationKey",
+        "resourceType2" : "Microsoft.Web/sites",
+        "resouceName2" :"XXX"
+
+    },
+    "resources": [],
+    "outputs": {
+        "InstrumentationKey": {
+			"value": "[reference(resourceId(variables('resourceType'), variables('resouceName')), '2015-05-01')['InstrumentationKey']]",
+			"type" : "string"
+        },
+        "Property": {
+			"value": "[reference(resourceId(variables('resourceType'), variables('resouceName')), '2015-05-01')['InstrumentationKey']]",
+			"type" : "string"
+        },
+        "PropertyFromVariable": {
+			"value": "[reference(resourceId(variables('resourceType'), variables('resouceName')), '2015-05-01')[variables('property')]]",
+			"type" : "string"
+        },
+        "exampleOutput": {
+			"value": "[reference(resourceId(variables('resourceType2'), variables('resouceName2')), '2015-05-01').name]",
+			"type" : "string"
+		}
+    }
+}
