@@ -159,7 +159,12 @@
         "cdnEndPointName": "[concat('CDE',variables('suffix'))]",
         "existingAppInsightsName" : "[if(equals(parameters('createAppInsights'),'Yes'),variables('appInsightsName'),variables('webSiteName'))]",
         "existingNamespace" : "[if(equals(parameters('createAppInsights'),'Yes'),'Microsoft.Insights/components','Microsoft.Web/sites')]",
-        "existingProperty" : "[if(equals(parameters('createAppInsights'),'Yes'),'InstrumentationKey','Name')]"
+        "existingProperty" : "[if(equals(parameters('createAppInsights'),'Yes'),'InstrumentationKey','Name')]",
+        "repoURL": "https://github.com/azureappserviceoss/wordpress-azure",
+        //"RepoUrl": "https://github.com/r3dlin3/wordpress-azure",
+        "repoBranch": "master"
+        //"RepoUrl": "https://github.com/WordPress/WordPress",
+        //"repoBranch": "4.9-branch",
     },
     "resources": [
         {
@@ -190,8 +195,8 @@
                         "[resourceId('Microsoft.Web/Sites', variables('webSiteName'))]"
                     ],
                     "properties": {
-                        "RepoUrl": "https://github.com/azureappserviceoss/wordpress-azure",
-                        "branch": "master",
+                        "RepoUrl": "[variables('repoURL')]",
+                        "branch": "[variables('repoBranch')]",
                         "IsManualIntegration": true
                     }
                 },
