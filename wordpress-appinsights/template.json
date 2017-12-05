@@ -43,11 +43,24 @@
                 "description":"MySQL SKU Tier"
              }
         },
-        "mysqlSkuSizeMB":{  
+        "mysqlStorageGB":{  
             "type":"int",
             "allowedValues":[  
-               128000,
-               51200
+              50,
+              125,
+              175,
+              250,
+              300,
+              375,
+              425,
+              500,
+              550,
+              675,
+              750,
+              800,
+              875,
+              925,
+              1000
             ],
             "defaultValue":128000,
             "metadata":{  
@@ -162,9 +175,10 @@
         "existingProperty" : "[if(equals(parameters('createAppInsights'),'Yes'),'InstrumentationKey','Name')]",
         "repoURL": "https://github.com/azureappserviceoss/wordpress-azure",
         //"RepoUrl": "https://github.com/r3dlin3/wordpress-azure",
-        "repoBranch": "master"
+        "repoBranch": "master",
         //"RepoUrl": "https://github.com/WordPress/WordPress",
         //"repoBranch": "4.9-branch",
+        "mysqlStorageMB": "[mul(parameters('mysqlStorageGB'),1024)]"
     },
     "resources": [
         {
@@ -253,14 +267,14 @@
                 "version": "[parameters('mysqlVersion')]",
                 "administratorLogin": "[parameters('mysqlAdministratorLogin')]",
                 "administratorLoginPassword": "[parameters('mysqlAdministratorPassword')]",
-                "storageMB": "[parameters('mysqlSkuSizeMB')]",
+                "storageMB": "[variables('mysqlStorageMB')]",
                 "sslEnforcement": "Disabled"
             },
             "sku": {
                 "name"    : "MYSQLB100",
                 "tier"    : "[parameters('mysqlSkuTier')]",
                 "capacity": "[parameters('mysqlDTU')]",
-                "size"    : "[parameters('mysqlSkuSizeMB')]"
+                "size"    : "[variables('mysqlStorageMB')]"
             },
             "resources": [
                 {

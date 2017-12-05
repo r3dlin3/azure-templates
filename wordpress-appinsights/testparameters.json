@@ -17,14 +17,17 @@
         "mysqlDTU": {
             "value": 100
         },
-        "mysqlSkuSizeMB": {
-            "value": 128000
+        "mysqlStorageGB": {
+            "value": 125
         },
         "appServiceSku": {
             "value": "S1"
         },
         "useCDN": {
-            "value": "No"
+            "value": "Yes"
+        },
+        "CDNsku": {
+            "value": "Standard_Akamai"
         }
 
     }
